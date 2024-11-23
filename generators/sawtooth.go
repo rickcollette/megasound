@@ -1,7 +1,7 @@
 package generators
 
 import (
-	"errors"
+	pkgerrors "github.com/pkg/errors"
 	"math"
 
 	"github.com/rickcollette/megasound"
@@ -21,7 +21,7 @@ func SawtoothTone(sr megasound.SampleRate, freq float64) (megasound.Streamer, er
 	dt := freq / float64(sr)
 
 	if dt >= 1.0/2.0 {
-		return nil, errors.New("faiface sawtooth tone generator: samplerate must be at least 2 times grater then frequency")
+		return nil, pkgerrors.New("megasound sawtooth tone generator: samplerate must be at least 2 times grater then frequency")
 	}
 
 	return &sawGenerator{dt, 0, false}, nil
@@ -35,7 +35,7 @@ func SawtoothToneReversed(sr megasound.SampleRate, freq float64) (megasound.Stre
 	dt := freq / float64(sr)
 
 	if dt >= 1.0/2.0 {
-		return nil, errors.New("faiface triangle tone generator: samplerate must be at least 2 times grater then frequency")
+		return nil, pkgerrors.New("megasound triangle tone generator: samplerate must be at least 2 times grater then frequency")
 	}
 
 	return &sawGenerator{dt, 0, true}, nil

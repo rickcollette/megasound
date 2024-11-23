@@ -6,4 +6,6 @@ This project starts where fairface/beep ended. There is need in a project I am w
 
 ## Megasound additions
 
-Here I'll list what I have added in.  
+- bpm detection: We can now detect the BPM of an audio file
+- key detection: We can now detect the key of an audio file
+  - camelot wheel mapping: we also provide camelot notation

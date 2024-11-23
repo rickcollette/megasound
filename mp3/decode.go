@@ -7,7 +7,7 @@ import (
 
 	"github.com/rickcollette/megasound"
 	gomp3 "github.com/hajimehoshi/go-mp3"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 func Decode(rc io.ReadCloser) (s megasound.StreamSeekCloser, format megasound.Format, err error) {
 	defer func() {
 		if err != nil {
-			err = errors.Wrap(err, "mp3")
+			err = pkgerrors.Wrap(err, "mp3")
 		}
 	}()
 	d, err := gomp3.NewDecoder(rc)
@@ -64,7 +64,7 @@ func (d *decoder) Stream(samples [][2]float64) (n int, ok bool) {
 			break
 		}
 		if err != nil {
-			d.err = errors.Wrap(err, "mp3")
+			d.err = pkgerrors.Wrap(err, "mp3")
 			break
 		}
 	}
@@ -89,7 +89,7 @@ func (d *decoder) Seek(p int) error {
 	}
 	_, err := d.d.Seek(int64(p)*gomp3BytesPerFrame, io.SeekStart)
 	if err != nil {
-		return errors.Wrap(err, "mp3")
+		return pkgerrors.Wrap(err, "mp3")
 	}
 	d.pos = p * gomp3BytesPerFrame
 	return nil
@@ -98,7 +98,7 @@ func (d *decoder) Seek(p int) error {
 func (d *decoder) Close() error {
 	err := d.closer.Close()
 	if err != nil {
-		return errors.Wrap(err, "mp3")
+		return pkgerrors.Wrap(err, "mp3")
 	}
 	return nil
 }

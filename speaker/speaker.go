@@ -6,7 +6,7 @@ import (
 
 	"github.com/rickcollette/megasound"
 	"github.com/hajimehoshi/oto"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 var (
@@ -39,7 +39,7 @@ func Init(sampleRate megasound.SampleRate, bufferSize int) error {
 	var err error
 	context, err = oto.NewContext(int(sampleRate), 2, 2, numBytes)
 	if err != nil {
-		return errors.Wrap(err, "failed to initialize speaker")
+		return pkgerrors.Wrap(err, "failed to initialize speaker")
 	}
 	player = context.NewPlayer()
 

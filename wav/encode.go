@@ -7,24 +7,24 @@ import (
 	"io"
 
 	"github.com/rickcollette/megasound"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 // Encode writes all audio streamed from s to w in WAVE format.
 //
-// Format precision must be 1 or 2 bytes.
+// Format precision must be 1, 2, or 3 bytes.
 func Encode(w io.WriteSeeker, s megasound.Streamer, format megasound.Format) (err error) {
 	defer func() {
 		if err != nil {
-			err = errors.Wrap(err, "wav")
+			err = pkgerrors.Wrap(err, "wav")
 		}
 	}()
 
 	if format.NumChannels <= 0 {
-		return errors.New("wav: invalid number of channels (less than 1)")
+		return pkgerrors.New("wav: invalid number of channels (less than 1)")
 	}
 	if format.Precision != 1 && format.Precision != 2 && format.Precision != 3 {
-		return errors.New("wav: unsupported precision, 1, 2 or 3 is supported")
+		return pkgerrors.New("wav: unsupported precision, 1, 2 or 3 is supported")
 	}
 
 	h := header{
@@ -68,7 +68,7 @@ func Encode(w io.WriteSeeker, s megasound.Streamer, format megasound.Format) (er
 				buf = buf[format.EncodeSigned(buf, sample):]
 			}
 		default:
-			panic(fmt.Errorf("wav: encode: invalid precision: %d", format.Precision))
+			return fmt.Errorf("wav: encode: invalid precision: %d", format.Precision)
 		}
 		nn, err := bw.Write(buffer[:n*format.Width()])
 		if err != nil {

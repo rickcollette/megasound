@@ -6,7 +6,7 @@ import (
 
 	"github.com/rickcollette/megasound"
 	"github.com/mewkiz/flac"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 // Decode takes a Reader containing audio data in FLAC format and returns a StreamSeekCloser,
@@ -33,7 +33,7 @@ func Decode(r io.Reader) (s megasound.StreamSeekCloser, format megasound.Format,
 	}
 
 	if err != nil {
-		return nil, megasound.Format{}, errors.Wrap(err, "flac")
+		return nil, megasound.Format{}, pkgerrors.Wrap(err, "flac")
 	}
 	format = megasound.Format{
 		SampleRate:  megasound.SampleRate(d.stream.Info.SampleRate),
@@ -150,7 +150,7 @@ func (d *decoder) Position() int {
 // p represents flac sample num perhaps?
 func (d *decoder) Seek(p int) error {
 	if !d.seekEnabled {
-		return errors.New("flac.decoder.Seek: not enabled")
+		return pkgerrors.New("flac.decoder.Seek: not enabled")
 	}
 
 	pos, err := d.stream.Seek(uint64(p))
@@ -162,7 +162,7 @@ func (d *decoder) Close() error {
 	if closer, ok := d.r.(io.Closer); ok {
 		err := closer.Close()
 		if err != nil {
-			return errors.Wrap(err, "flac")
+			return pkgerrors.Wrap(err, "flac")
 		}
 	}
 	return nil

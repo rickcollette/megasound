@@ -1,7 +1,7 @@
 package generators
 
 import (
-	"errors"
+	pkgerrors "github.com/pkg/errors"
 	"math"
 
 	"github.com/rickcollette/megasound"
@@ -19,7 +19,7 @@ func SineTone(sr megasound.SampleRate, freq float64) (megasound.Streamer, error)
 	dt := freq / float64(sr)
 
 	if dt >= 1.0/2.0 {
-		return nil, errors.New("faiface sine tone generator: samplerate must be at least 2 times grater then frequency")
+		return nil, pkgerrors.New("megasound sine tone generator: samplerate must be at least 2 times grater then frequency")
 	}
 
 	return &sineGenerator{dt, 0}, nil

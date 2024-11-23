@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/rickcollette/megasound"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 // Decode takes a Reader containing audio data in WAVE format and returns a StreamSeekCloser,
@@ -28,7 +28,7 @@ func Decode(r io.Reader) (s megasound.StreamSeekCloser, format megasound.Format,
 
 	// READ "RIFF" header
 	if err := binary.Read(r, binary.LittleEndian, d.h.RiffMark[:]); err != nil {
-		return nil, megasound.Format{}, errors.Wrap(err, "wav")
+		return nil, megasound.Format{}, pkgerrors.Wrap(err, "wav")
 	}
 	if string(d.h.RiffMark[:]) != "RIFF" {
 		return nil, megasound.Format{}, fmt.Errorf("wav: missing RIFF at the beginning > %s", string(d.h.RiffMark[:]))
@@ -36,13 +36,13 @@ func Decode(r io.Reader) (s megasound.StreamSeekCloser, format megasound.Format,
 
 	// READ Total file size
 	if err := binary.Read(r, binary.LittleEndian, &d.h.FileSize); err != nil {
-		return nil, megasound.Format{}, errors.Wrap(err, "wav: missing RIFF file size")
+		return nil, megasound.Format{}, pkgerrors.Wrap(err, "wav: missing RIFF file size")
 	}
 	if err := binary.Read(r, binary.LittleEndian, d.h.WaveMark[:]); err != nil {
-		return nil, megasound.Format{}, errors.Wrap(err, "wav: missing RIFF file type")
+		return nil, megasound.Format{}, pkgerrors.Wrap(err, "wav: missing RIFF file type")
 	}
 	if string(d.h.WaveMark[:]) != "WAVE" {
-		return nil, megasound.Format{}, errors.New("wav: unsupported file type")
+		return nil, megasound.Format{}, pkgerrors.New("wav: unsupported file type")
 	}
 
 	// check each formtypes
@@ -51,17 +51,17 @@ func Decode(r io.Reader) (s megasound.StreamSeekCloser, format megasound.Format,
 	d.hsz = 4 + 4 + 4 // add size of (RiffMark + FileSize + WaveMark)
 	for string(ft[:]) != "data" {
 		if err = binary.Read(r, binary.LittleEndian, ft[:]); err != nil {
-			return nil, megasound.Format{}, errors.Wrap(err, "wav: missing chunk type")
+			return nil, megasound.Format{}, pkgerrors.Wrap(err, "wav: missing chunk type")
 		}
 		switch {
 		case string(ft[:]) == "fmt ":
 			d.h.FmtMark = ft
 			if err := binary.Read(r, binary.LittleEndian, &d.h.FormatSize); err != nil {
-				return nil, megasound.Format{}, errors.New("wav: missing format chunk size")
+				return nil, megasound.Format{}, pkgerrors.New("wav: missing format chunk size")
 			}
 			d.hsz += 4 + 4 + d.h.FormatSize // add size of (FmtMark + FormatSize + its trailing size)
 			if err := binary.Read(r, binary.LittleEndian, &d.h.FormatType); err != nil {
-				return nil, megasound.Format{}, errors.New("wav: missing format type")
+				return nil, megasound.Format{}, pkgerrors.New("wav: missing format type")
 			}
 			if d.h.FormatType == -2 {
 				// WAVEFORMATEXTENSIBLE
@@ -70,7 +70,7 @@ func Decode(r io.Reader) (s megasound.StreamSeekCloser, format megasound.Format,
 					guid{0, 0, 0, [8]byte{0, 0, 0, 0, 0, 0, 0, 0}},
 				}
 				if err := binary.Read(r, binary.LittleEndian, &fmtchunk); err != nil {
-					return nil, megasound.Format{}, errors.New("wav: missing format chunk body")
+					return nil, megasound.Format{}, pkgerrors.New("wav: missing format chunk body")
 				}
 				d.h.NumChans = fmtchunk.NumChans
 				d.h.SampleRate = fmtchunk.SampleRate
@@ -95,7 +95,7 @@ func Decode(r io.Reader) (s megasound.StreamSeekCloser, format megasound.Format,
 				// WAVEFORMAT or WAVEFORMATEX
 				fmtchunk := formatchunk{0, 0, 0, 0, 0}
 				if err := binary.Read(r, binary.LittleEndian, &fmtchunk); err != nil {
-					return nil, megasound.Format{}, errors.New("wav: missing format chunk body")
+					return nil, megasound.Format{}, pkgerrors.New("wav: missing format chunk body")
 				}
 				d.h.NumChans = fmtchunk.NumChans
 				d.h.SampleRate = fmtchunk.SampleRate
@@ -107,45 +107,45 @@ func Decode(r io.Reader) (s megasound.StreamSeekCloser, format megasound.Format,
 				if d.h.FormatSize > 16 {
 					trash := make([]byte, d.h.FormatSize-16)
 					if err := binary.Read(r, binary.LittleEndian, trash); err != nil {
-						return nil, megasound.Format{}, errors.Wrap(err, "wav: missing extended format chunk body")
+						return nil, megasound.Format{}, pkgerrors.Wrap(err, "wav: missing extended format chunk body")
 					}
 				}
 			}
 		case string(ft[:]) == "data":
 			d.h.DataMark = ft
 			if err := binary.Read(r, binary.LittleEndian, &d.h.DataSize); err != nil {
-				return nil, megasound.Format{}, errors.Wrap(err, "wav: missing data chunk size")
+				return nil, megasound.Format{}, pkgerrors.Wrap(err, "wav: missing data chunk size")
 			}
 			d.hsz += 4 + 4 //add size of (DataMark + DataSize)
 		default:
 			if err := binary.Read(r, binary.LittleEndian, &fs); err != nil {
-				return nil, megasound.Format{}, errors.Wrap(err, "wav: missing unknown chunk size")
+				return nil, megasound.Format{}, pkgerrors.Wrap(err, "wav: missing unknown chunk size")
 			}
 			if fs % 2 != 0 {
 				fs = fs + 1
 			}
 			trash := make([]byte, fs)
 			if err := binary.Read(r, binary.LittleEndian, trash); err != nil {
-				return nil, megasound.Format{}, errors.Wrap(err, "wav: missing unknown chunk body")
+				return nil, megasound.Format{}, pkgerrors.Wrap(err, "wav: missing unknown chunk body")
 			}
 			d.hsz += 4 + fs //add size of (Unknown formtype + formsize)
 		}
 	}
 
 	if string(d.h.FmtMark[:]) != "fmt " {
-		return nil, megasound.Format{}, errors.New("wav: missing format chunk marker")
+		return nil, megasound.Format{}, pkgerrors.New("wav: missing format chunk marker")
 	}
 	if string(d.h.DataMark[:]) != "data" {
-		return nil, megasound.Format{}, errors.New("wav: missing data chunk marker")
+		return nil, megasound.Format{}, pkgerrors.New("wav: missing data chunk marker")
 	}
 	if d.h.FormatType != 1 && d.h.FormatType != -2 {
 		return nil, megasound.Format{}, fmt.Errorf("wav: unsupported format type - %d", d.h.FormatType)
 	}
 	if d.h.NumChans <= 0 {
-		return nil, megasound.Format{}, errors.New("wav: invalid number of channels (less than 1)")
+		return nil, megasound.Format{}, pkgerrors.New("wav: invalid number of channels (less than 1)")
 	}
 	if d.h.BitsPerSample != 8 && d.h.BitsPerSample != 16 && d.h.BitsPerSample != 24 {
-		return nil, megasound.Format{}, errors.New("wav: unsupported number of bits per sample, 8 or 16 or 24 are supported")
+		return nil, megasound.Format{}, pkgerrors.New("wav: unsupported number of bits per sample, 8 or 16 or 24 are supported")
 	}
 	format = megasound.Format{
 		SampleRate:  megasound.SampleRate(d.h.SampleRate),
@@ -280,7 +280,7 @@ func (d *decoder) Seek(p int) error {
 	pos := int32(p) * int32(d.h.BytesPerFrame)
 	_, err := seeker.Seek(int64(pos+d.hsz), io.SeekStart) // hsz is the size of the header
 	if err != nil {
-		return errors.Wrap(err, "wav: seek error")
+		return pkgerrors.Wrap(err, "wav: seek error")
 	}
 	d.pos = pos
 	return nil
@@ -290,7 +290,7 @@ func (d *decoder) Close() error {
 	if closer, ok := d.r.(io.Closer); ok {
 		err := closer.Close()
 		if err != nil {
-			return errors.Wrap(err, "wav")
+			return pkgerrors.Wrap(err, "wav")
 		}
 	}
 	return nil

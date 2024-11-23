@@ -6,7 +6,7 @@ import (
 
 	"github.com/rickcollette/megasound"
 	"github.com/jfreymuth/oggvorbis"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 func Decode(rc io.ReadCloser) (s megasound.StreamSeekCloser, format megasound.Format, err error) {
 	defer func() {
 		if err != nil {
-			err = errors.Wrap(err, "ogg/vorbis")
+			err = pkgerrors.Wrap(err, "ogg/vorbis")
 		}
 	}()
 	d, err := oggvorbis.NewReader(rc)
@@ -60,7 +60,7 @@ func (d *decoder) Stream(samples [][2]float64) (n int, ok bool) {
 			break
 		}
 		if err != nil {
-			d.err = errors.Wrap(err, "ogg/vorbis")
+			d.err = pkgerrors.Wrap(err, "ogg/vorbis")
 			break
 		}
 	}
@@ -82,7 +82,7 @@ func (d *decoder) Position() int {
 func (d *decoder) Seek(p int) error {
 	err := d.d.SetPosition(int64(p))
 	if err != nil {
-		return errors.Wrap(err, "ogg/vorbis")
+		return pkgerrors.Wrap(err, "ogg/vorbis")
 	}
 	return nil
 }
@@ -90,7 +90,7 @@ func (d *decoder) Seek(p int) error {
 func (d *decoder) Close() error {
 	err := d.closer.Close()
 	if err != nil {
-		return errors.Wrap(err, "ogg/vorbis")
+		return pkgerrors.Wrap(err, "ogg/vorbis")
 	}
 	return nil
 }
